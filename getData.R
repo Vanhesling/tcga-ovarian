@@ -2,10 +2,10 @@
 #####
 
 require(synapseClient)
-require(affy)
-require(snm)
+#require(affy)
+#require(snm)
 
-theseNAs <- c("NA", "", " ", "[Not Reported]")
+theseNAs <- c("NA", "", " ", "[Not Reported]", "NULL", "null")
 
 
 tcgaData <- synapseQuery('SELECT * FROM dataset WHERE dataset.repository == "TCGA" AND dataset.parentId == "164427"')
@@ -81,11 +81,11 @@ myAgilentBatch <- character()
 for( i in exprAgilentIds ){
   
   tmpEntity <- downloadEntity(i)
-  theseFiles <- file.path(tmpEntity$cacheDir, tmpEntity$files[grepl("U133A", basename(tmpEntity$files))])
+  theseFiles <- file.path(tmpEntity$cacheDir, tmpEntity$files[grepl("gene", basename(tmpEntity$files))])
   
   for( f in theseFiles ){
     colTmp <- as.character(read.delim(f, nrow=1, header=F, colClasses=c("NULL", "character"), as.is=TRUE))
-    tmpDat <- read.delim(f, header=TRUE, colClasses=c("character", "numeric"), as.is=TRUE, skip=1, na.strings=theseNAs)
+    tmpDat <- read.delim(f, header=FALSE, colClasses=c("character", "numeric"), as.is=TRUE, skip=2, na.strings=theseNAs)
     rowTmp <- tmpDat[, 1]
     tmpDat <- matrix(cbind(tmpDat[, -1]))
     rownames(tmpDat) <- rowTmp
@@ -101,66 +101,12 @@ for( i in exprAgilentIds ){
   
 }
 
-
-
-
-
-
-
-## U133A - TABLED FOR NOW
-exprIds <- ovLayers$layer.id[ ovPlatform == "HT_HG-U133A" & ovLevel == "Level_3" ]
-
-myBatch <- character()
-## LAUNCH INTO GRABBING LEVEL 1 EXPRESSION DATA (a lot of data)
-for( i in exprIds ){
-  
-  tmpEntity <- downloadEntity(i)
-  theseFiles <- file.path(tmpEntity$cacheDir, tmpEntity$files[grepl("U133A", basename(tmpEntity$files))])
-  
-  for( f in theseFiles ){
-    colTmp <- as.character(read.delim(f, nrow=1, header=F, colClasses=c("NULL", "character"), as.is=TRUE))
-    tmpDat <- read.delim(f, header=TRUE, colClasses=c("character", "numeric"), as.is=TRUE, skip=1, na.strings=theseNAs)
-    rowTmp <- tmpDat[, 1]
-    tmpDat <- matrix(cbind(tmpDat[, -1]))
-    rownames(tmpDat) <- rowTmp
-    colnames(tmpDat) <- colTmp
-    if( !exists("exprMat") ){
-      exprMat <- tmpDat
-    } else{
-      exprMat <- cbind(exprMat, tmpDat)
-    }
-  }
-  
-  myBatch <- c(myBatch, rep(i, length(theseFiles)))
-  
-}
-
-
-## GRAB MAPPING INFORMATION
-exprMapEntity <- downloadEntity(ovLayersAll$layer.id[ grepl("mage",ovLayersAll$layer.name) & grepl("U133A", ovLayersAll$layer.name)])
-exprMap <- read.delim(file.path(exprMapEntity$cacheDir, exprMapEntity$files[ grepl("sdrf", basename(exprMapEntity$files)) ]), header=T, as.is=T, na.strings=theseNAs)
-
-exprName <- exprMap$Extract.Name
-names(exprName) <- exprMap$Array.Data.File
-exprName <- exprName[basename(myFiles)]
-
-ab <- ReadAffy(filenames=myFiles, sampleNames=exprName)
-rawMat <- exprs(ab)
-normMat <- snm(rawMat, adj.var=model.matrix(~factor(myBatch)), int.var=as.data.frame(matrix(1:length(myBatch), ncol=1, nrow=length(myBatch))), rm.adj=TRUE)
-exprs(ab) <- normMat
-
-exprFinal <- rma(ab, normalize=FALSE, background=FALSE)
-
-
-exprLayer <- Layer(list(name="U133A Expression", type="E", parentId="163905"))
+exprLayer <- Layer(list(name="Agilent Expression", type="E", parentId="163905"))
 exprLayer <- createEntity(exprLayer)
-exprLayer <- addObject(exprLayer, exprMat)
+exprLayer <- addObject(exprLayer, exprAgilentMat)
 exprLayer <- storeEntity(exprLayer)
 exprLayer
-## ID 
-
-
-
+## ID 167731
 
 
 
@@ -175,7 +121,7 @@ clin <- lapply(as.list(clinLayer$files), function(x){
 })
 names(clin) <- clinLayer$files
 
-lapply(clin, function(x){ grep("uuid", names(x), value=TRUE) })
+#lapply(clin, function(x){ grep("uuid", names(x), value=TRUE) })
 
 
 
