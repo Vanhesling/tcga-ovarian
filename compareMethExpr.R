@@ -4,11 +4,16 @@
 
 require(synapseClient)
 
-methLayer <- loadEntity("164021")
+methLayer <- loadEntity("")
 methMat <- methLayer$objects$methMat
 methAnn <- methLayer$objects$methAnn
 
-methAnn[grepl("BRCA", methAnn$Gene_Symbol), ]
+
+## BRCA1
+brca1meth <- rownames(methAnn)[ grep("BRCA1", methAnn$Gene_Symbol) ]
+## BRCA2
+brca2meth <- rownames(methAnn)[ grep("BRCA2", methAnn$Gene_Symbol) ]
+
 
 ## TAKE A LOOK AT SOME METH DATA
 boxplot(as.data.frame(methMat), range=0)

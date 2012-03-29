@@ -8,7 +8,7 @@ require(snm)
 theseNAs <- c("NA", "", " ", "[Not Reported]")
 
 
-tcgaData <- synapseQuery('SELECT * FROM dataset WHERE dataset.Institution == "TCGA"')
+tcgaData <- synapseQuery('SELECT * FROM dataset WHERE dataset.repository == "TCGA" AND dataset.parentId == "164427"')
 ovId <- tcgaData$dataset.id[ grepl("Ovarian", tcgaData$dataset.name) ]
 
 ## GRAB THE OVARIAN LAYERS
@@ -62,22 +62,54 @@ methLayer <- addObject(methLayer, methMat)
 methLayer <- addObject(methLayer, methAnn)
 methLayer <- storeEntity(methLayer)
 methLayer
-## ID 164069
+## ID 167706
 
 
-## BRCA1
-brca1meth <- rownames(methAnn)[ grep("BRCA1", methAnn$Gene_Symbol) ]
-## BRCA2
-brca2meth <- rownames(methAnn)[ grep("BRCA2", methAnn$Gene_Symbol) ]
+
+
+
+
 
 
 
 #####
 ## EXPRESSION DATA
 #####
-exprIds <- ovLayers$layer.id[ ovPlatform == "HT_HG-U133A" & ovLevel == "Level_1" ]
+exprAgilentIds <- ovLayers$layer.id[ grepl("AgilentG4502A", ovPlatform) & ovLevel == "Level_3" ]
 
-myFiles <- character()
+myAgilentBatch <- character()
+for( i in exprAgilentIds ){
+  
+  tmpEntity <- downloadEntity(i)
+  theseFiles <- file.path(tmpEntity$cacheDir, tmpEntity$files[grepl("U133A", basename(tmpEntity$files))])
+  
+  for( f in theseFiles ){
+    colTmp <- as.character(read.delim(f, nrow=1, header=F, colClasses=c("NULL", "character"), as.is=TRUE))
+    tmpDat <- read.delim(f, header=TRUE, colClasses=c("character", "numeric"), as.is=TRUE, skip=1, na.strings=theseNAs)
+    rowTmp <- tmpDat[, 1]
+    tmpDat <- matrix(cbind(tmpDat[, -1]))
+    rownames(tmpDat) <- rowTmp
+    colnames(tmpDat) <- colTmp
+    if( !exists("exprAgilentMat") ){
+      exprAgilentMat <- tmpDat
+    } else{
+      exprAgilentMat <- cbind(exprAgilentMat, tmpDat)
+    }
+  }
+  
+  myAgilentBatch <- c(myAgilentBatch, rep(i, length(theseFiles)))
+  
+}
+
+
+
+
+
+
+
+## U133A - TABLED FOR NOW
+exprIds <- ovLayers$layer.id[ ovPlatform == "HT_HG-U133A" & ovLevel == "Level_3" ]
+
 myBatch <- character()
 ## LAUNCH INTO GRABBING LEVEL 1 EXPRESSION DATA (a lot of data)
 for( i in exprIds ){
@@ -85,7 +117,20 @@ for( i in exprIds ){
   tmpEntity <- downloadEntity(i)
   theseFiles <- file.path(tmpEntity$cacheDir, tmpEntity$files[grepl("U133A", basename(tmpEntity$files))])
   
-  myFiles <- c(myFiles, theseFiles)
+  for( f in theseFiles ){
+    colTmp <- as.character(read.delim(f, nrow=1, header=F, colClasses=c("NULL", "character"), as.is=TRUE))
+    tmpDat <- read.delim(f, header=TRUE, colClasses=c("character", "numeric"), as.is=TRUE, skip=1, na.strings=theseNAs)
+    rowTmp <- tmpDat[, 1]
+    tmpDat <- matrix(cbind(tmpDat[, -1]))
+    rownames(tmpDat) <- rowTmp
+    colnames(tmpDat) <- colTmp
+    if( !exists("exprMat") ){
+      exprMat <- tmpDat
+    } else{
+      exprMat <- cbind(exprMat, tmpDat)
+    }
+  }
+  
   myBatch <- c(myBatch, rep(i, length(theseFiles)))
   
 }
