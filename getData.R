@@ -2,9 +2,8 @@
 #####
 
 require(synapseClient)
-#require(affy)
-#require(snm)
 
+options(stringsAsFactors=FALSE)
 theseNAs <- c("NA", "", " ", "[Not Reported]", "NULL", "null")
 
 
@@ -27,7 +26,7 @@ ovLevel <- sapply(ovSplit, "[[", 2)
 #####
 ## METHYLATION DATA
 #####
-methIds <- ovLayers$layer.id[ ovPlatform == "HumanMethylation27" & ovLevel == "Level_3" ]
+methIds <- ovLayers$layer.id[ ovPlatform == "HumanMethylation27" & ovLevel == "Level_2" ]
 
 ## LAUNCH INTO GRABBING LEVEL 3 METHYLATION DATA
 for( i in methIds ){
@@ -36,8 +35,8 @@ for( i in methIds ){
   theseFiles <- file.path(tmpEntity$cacheDir, tmpEntity$files[grepl("Methylation", basename(tmpEntity$files))])
   
   for( f in theseFiles ){
-    colTmp <- as.character(read.delim(f, nrow=1, header=F, colClasses=c("NULL", "character", "NULL", "NULL", "NULL"), as.is=TRUE))
-    tmpDat <- read.delim(f, header=TRUE, colClasses=c("character", "numeric", "NULL", "NULL", "NULL"), as.is=TRUE, skip=1, na.strings=theseNAs)
+    colTmp <- as.character(read.delim(f, nrow=1, header=F, colClasses=c("NULL", "character", "NULL", "NULL"), as.is=TRUE))
+    tmpDat <- read.delim(f, header=TRUE, colClasses=c("character", "numeric", "NULL", "NULL"), as.is=TRUE, skip=1, na.strings=theseNAs)
     rowTmp <- tmpDat[, 1]
     tmpDat <- matrix(cbind(tmpDat[, -1]))
     rownames(tmpDat) <- rowTmp
@@ -51,18 +50,13 @@ for( i in methIds ){
   
 }
 
-## GRAB THE ANNOTATION INFO FROM ONE FILE
-methAnn <- read.delim(f, header=TRUE, as.is=TRUE, skip=1, na.strings=theseNAs)
-rownames(methAnn) <- methAnn[, 1]
-methAnn <- methAnn[, -c(1:2)]
 
 methLayer <- Layer(list(name="Methylation", type="G", parentId="163905"))
 methLayer <- createEntity(methLayer)
 methLayer <- addObject(methLayer, methMat)
-methLayer <- addObject(methLayer, methAnn)
 methLayer <- storeEntity(methLayer)
 methLayer
-## ID 167706
+## ID 167945
 
 
 

@@ -2,64 +2,72 @@
 ## LEVEL 3 ONLY
 #####
 
+source("tcgaID.R")
+
 require(synapseClient)
+require(IlluminaHumanMethylation27k.db)
+
 
 #####
 ## GRAB THE METHYLATION DATA
 #####
-methLayer <- loadEntity("167706")
+methLayer <- loadEntity("167945")
 methMat <- methLayer$objects$methMat
-methAnn <- methLayer$objects$methAnn
+methMat <- methMat[, order(colnames(methMat))]
 
-## GET THE NAMES STRAIGHTENED OUT
-methSplit <- strsplit(colnames(methMat), "-", fixed=T)
-methParticipant <- sapply(methSplit, "[[", 3)
-methSample <- substr(sapply(methSplit, "[[", 4), 1, 2)
-methVial <- substr(sapply(methSplit, "[[", 4), 3, 3)
-methPortion <- substr(sapply(methSplit, "[[", 5), 1, 2)
-methAnalyte <- substr(sapply(methSplit, "[[", 5), 3, 3)
-methPlate <- sapply(methSplit, "[[", 6)
-
+methID <- tcgaID(id=colnames(methMat))
 methNames <- sapply(strsplit(colnames(methMat), "-", fixed=T), function(x){
-  blah <- paste(x[1:5], collapse="-")
+  blah <- paste(x[1:4], collapse="-")
   blah <- substr(blah, 1, nchar(blah) - 1)
+  blah
 })
 
+idm <- methID$Sample == "01"
+methMat <- methMat[, idm]
+methID <- lapply(methID, "[", idm)
+methNames <- methNames[idm]
 
+## THERE IS ONE DUPLICATE - WILL JUST TAKE THE FIRST ONE
+dm <- !duplicated(methNames)
+methMat <- methMat[, dm]
+methID <- lapply(methID, "[", dm)
+methNames <- methNames[dm]
+colnames(methMat) <- methNames
 
 #####
 ## GRAB THE EXPRESSION DATA
 #####
 exprLayer <- loadEntity("167731")
 exprMat <- exprLayer$objects$exprAgilentMat
+exprMat <- exprMat[, order(colnames(exprMat))]
 
-## GET THE NAMES STRAIGHTENED OUT
-exprSplit <- strsplit(colnames(exprMat), "-", fixed=T)
-exprParticipant <- sapply(exprSplit, "[[", 3)
-exprSample <- substr(sapply(exprSplit, "[[", 4), 1, 2)
-exprVial <- substr(sapply(exprSplit, "[[", 4), 3, 3)
-exprPortion <- substr(sapply(exprSplit, "[[", 5), 1, 2)
-exprAnalyte <- substr(sapply(exprSplit, "[[", 5), 3, 3)
-exprPlate <- sapply(exprSplit, "[[", 6)
-
+exprID <- tcgaID(id=colnames(exprMat))
 exprNames <- sapply(strsplit(colnames(exprMat), "-", fixed=T), function(x){
-  blah <- paste(x[1:5], collapse="-")
+  blah <- paste(x[1:4], collapse="-")
   blah <- substr(blah, 1, nchar(blah) - 1)
   blah
 })
 
+ide <- exprID$Sample == "01"
+exprMat <- exprMat[, ide]
+exprID <- lapply(exprID, "[", ide)
+exprNames <- exprNames[ide]
+colnames(exprMat) <- exprNames
 
 
-table(unique(colnames(meth)) %in% unique(colnames(expr)))
+#####
+## FIND OVERLAP
+#####
+meth <- methMat
+expr <- exprMat[, colnames(meth)]
 
-
-
-
+## GRAB METHYLATION ANNOTATION
+mapDat <- as.list(IlluminaHumanMethylation27kALIAS2PROBE)
 
 ## BRCA1
-brca1meth <- rownames(methAnn)[ grep("BRCA1", methAnn$Gene_Symbol) ]
-brca1expr <- rownames(exprMat)[ grep("BRCA1", rownames(exprMat)) ]
+brca1meth <- meth[ mapDat[["BRCA1"]], ]
+brca1expr <- expr[grep("BRCA1", rownames(expr)), ]
 ## BRCA2
-brca2meth <- rownames(methAnn)[ grep("BRCA2", methAnn$Gene_Symbol) ]
-brca2expr <- rownames(exprMat)[ grep("BRCA2", rownames(exprMat)) ]
+brca2meth <- meth[ mapDat[["BRCA2"]], ]
+brca2expr <- expr[grep("BRCA2", rownames(expr)), ]
 
