@@ -26,10 +26,12 @@ ovLevel <- sapply(ovSplit, "[[", 2)
 #####
 ## METHYLATION DATA
 #####
-methIds <- ovLayers$layer.id[ ovPlatform == "HumanMethylation27" & ovLevel == "Level_2" ]
+
+## LEVEL 2 DATA
+methIds2 <- ovLayers$layer.id[ ovPlatform == "HumanMethylation27" & ovLevel == "Level_2" ]
 
 ## LAUNCH INTO GRABBING LEVEL 3 METHYLATION DATA
-for( i in methIds ){
+for( i in methIds2 ){
   
   tmpEntity <- downloadEntity(i)
   theseFiles <- file.path(tmpEntity$cacheDir, tmpEntity$files[grepl("Methylation", basename(tmpEntity$files))])
@@ -41,24 +43,61 @@ for( i in methIds ){
     tmpDat <- matrix(cbind(tmpDat[, -1]))
     rownames(tmpDat) <- rowTmp
     colnames(tmpDat) <- colTmp
-    if( !exists("methMat") ){
-      methMat <- tmpDat
+    if( !exists("methMat2") ){
+      methMat2 <- tmpDat
     } else{
-      methMat <- cbind(methMat, tmpDat)
+      methMat2 <- cbind(methMat2, tmpDat)
     }
   }
   
 }
 
 
-methLayer <- Layer(list(name="Methylation", type="G", parentId="163905"))
-methLayer <- createEntity(methLayer)
-methLayer <- addObject(methLayer, methMat)
-methLayer <- storeEntity(methLayer)
-methLayer
-## ID 167945
+methLayer2 <- Layer(list(name="Methylation - Level 2", type="G", parentId="163905"))
+methLayer2 <- createEntity(methLayer2)
+methLayer2 <- addObject(methLayer2, methMat2)
+methLayer2 <- storeEntity(methLayer2)
+methLayer2
+## ID 168671
 
 
+## LEVEL 3 DATA
+methIds3 <- ovLayers$layer.id[ ovPlatform == "HumanMethylation27" & ovLevel == "Level_3" ]
+
+## LAUNCH INTO GRABBING LEVEL 3 METHYLATION DATA
+for( i in methIds3 ){
+  
+  tmpEntity <- downloadEntity(i)
+  theseFiles <- file.path(tmpEntity$cacheDir, tmpEntity$files[grepl("Methylation", basename(tmpEntity$files))])
+  
+  for( f in theseFiles ){
+    colTmp <- as.character(read.delim(f, nrow=1, header=F, colClasses=c("NULL", "character", "NULL", "NULL", "NULL"), as.is=TRUE))
+    tmpDat <- read.delim(f, header=TRUE, colClasses=c("character", "numeric", "NULL", "NULL", "NULL"), as.is=TRUE, skip=1, na.strings=theseNAs)
+    rowTmp <- tmpDat[, 1]
+    tmpDat <- matrix(cbind(tmpDat[, -1]))
+    rownames(tmpDat) <- rowTmp
+    colnames(tmpDat) <- colTmp
+    if( !exists("methMat3") ){
+      methMat3 <- tmpDat
+    } else{
+      methMat3 <- cbind(methMat3, tmpDat)
+    }
+  }
+  
+}
+
+methAnn3 <- read.delim(f, header=T, as.is=T, skip=1, na.strings=theseNAs)
+rowTmp <- methAnn3[, 1]
+methAnn3 <- methAnn3[, -1]
+rownames(methAnn3) <- rowTmp
+
+methLayer3 <- Layer(list(name="Methylation - Level 3", type="G", parentId="163905"))
+methLayer3 <- createEntity(methLayer3)
+methLayer3 <- addObject(methLayer3, methMat3)
+methLayer3 <- addObject(methLayer3, methAnn3)
+methLayer3 <- storeEntity(methLayer3)
+methLayer3
+## ID 168668
 
 
 
@@ -95,25 +134,32 @@ for( i in exprAgilentIds ){
   
 }
 
-exprLayer <- Layer(list(name="Agilent Expression", type="E", parentId="163905"))
+exprLayer <- Layer(list(name="Agilent Expression - Level 3", type="E", parentId="163905"))
 exprLayer <- createEntity(exprLayer)
 exprLayer <- addObject(exprLayer, exprAgilentMat)
+exprLayer <- addObject(exprLayer, myAgilentBatch)
 exprLayer <- storeEntity(exprLayer)
 exprLayer
-## ID 167731
+## ID 168673
 
 
 
 #####
 ## CLINICAL DATA
 #####
-clinId <- ovLayersAll$layer.id[ grepl("clinical", ovLayersAll$layer.name, fixed=T) ]
-clinLayer <- downloadEntity(clinId)
-
-clin <- lapply(as.list(clinLayer$files), function(x){
-  read.delim(file.path(clinLayer$cacheDir, x), header=T, as.is=T, na.strings=theseNAs)
-})
-names(clin) <- clinLayer$files
+# clinId <- ovLayersAll$layer.id[ grepl("clinical", ovLayersAll$layer.name, fixed=T) & !grepl("intgen", ovLayersAll$layer.name, fixed=T) ]
+# clinL <- downloadEntity(clinId)
+# 
+# clin <- lapply(as.list(clinL$files), function(x){
+#   read.delim(file.path(clinL$cacheDir, x), header=T, as.is=T, na.strings=theseNAs)
+# })
+# names(clin) <- clinL$files
+# 
+# clinLayer <- Layer(list(name="Clinical Features", type="C", parentId="163905"))
+# clinLayer <- createEntity(clinLayer)
+# clinLayer <- addObject(clinLayer, clin)
+# clinLayer <- storeEntity(clinLayer)
+# clinLayer
 
 #lapply(clin, function(x){ grep("uuid", names(x), value=TRUE) })
 

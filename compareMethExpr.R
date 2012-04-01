@@ -7,6 +7,7 @@ source("tcgaID.R")
 require(synapseClient)
 require(IlluminaHumanMethylation27k.db)
 
+options(stringsAsFactors=T)
 
 #####
 ## GRAB THE METHYLATION DATA
@@ -62,12 +63,12 @@ meth <- methMat
 expr <- exprMat[, colnames(meth)]
 
 ## GRAB METHYLATION ANNOTATION
-mapDat <- as.list(IlluminaHumanMethylation27kALIAS2PROBE)
+methMap <- as.list(IlluminaHumanMethylation27kALIAS2PROBE)
 
 ## BRCA1
-brca1meth <- meth[ mapDat[["BRCA1"]], ]
+brca1meth <- meth[ methMap[["BRCA1"]], ]
 brca1expr <- expr[grep("BRCA1", rownames(expr)), ]
 ## BRCA2
-brca2meth <- meth[ mapDat[["BRCA2"]], ]
+brca2meth <- meth[ methMap[["BRCA2"]], ]
 brca2expr <- expr[grep("BRCA2", rownames(expr)), ]
 
