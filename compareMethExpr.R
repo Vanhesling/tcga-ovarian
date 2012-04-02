@@ -12,33 +12,59 @@ options(stringsAsFactors=T)
 #####
 ## GRAB THE METHYLATION DATA
 #####
-methLayer <- loadEntity("167945")
-methMat <- methLayer$objects$methMat
-methMat <- methMat[, order(colnames(methMat))]
+methLayer2 <- loadEntity("168671")
+methMat2 <- methLayer2$objects$methMat2
+methMat2 <- methMat2[, order(colnames(methMat2))]
 
-methID <- tcgaID(id=colnames(methMat))
-methNames <- sapply(strsplit(colnames(methMat), "-", fixed=T), function(x){
+methID2 <- tcgaID(id=colnames(methMat2))
+methNames2 <- sapply(strsplit(colnames(methMat2), "-", fixed=T), function(x){
   blah <- paste(x[1:4], collapse="-")
   blah <- substr(blah, 1, nchar(blah) - 1)
   blah
 })
 
-idm <- methID$Sample == "01"
-methMat <- methMat[, idm]
-methID <- lapply(methID, "[", idm)
-methNames <- methNames[idm]
+idm2 <- methID2$Sample == "01"
+methMat2 <- methMat2[, idm2]
+methID2 <- lapply(methID2, "[", idm2)
+methNames2 <- methNames2[idm2]
 
 ## THERE IS ONE DUPLICATE - WILL JUST TAKE THE FIRST ONE
-dm <- !duplicated(methNames)
-methMat <- methMat[, dm]
-methID <- lapply(methID, "[", dm)
-methNames <- methNames[dm]
-colnames(methMat) <- methNames
+dm2 <- !duplicated(methNames2)
+methMat2 <- methMat2[, dm2]
+methID2 <- lapply(methID2, "[", dm2)
+methNames2 <- methNames2[dm2]
+colnames(methMat2) <- methNames2
+
+
+methLayer3 <- loadEntity("168693")
+methMat3 <- methLayer3$objects$methMat3
+methMat3 <- methMat3[, order(colnames(methMat3))]
+
+methID3 <- tcgaID(id=colnames(methMat3))
+methNames3 <- sapply(strsplit(colnames(methMat3), "-", fixed=T), function(x){
+  blah <- paste(x[1:4], collapse="-")
+  blah <- substr(blah, 1, nchar(blah) - 1)
+  blah
+})
+
+idm3 <- methID3$Sample == "01"
+methMat3 <- methMat3[, idm3]
+methID3 <- lapply(methID3, "[", idm3)
+methNames3 <- methNames3[idm3]
+
+## THERE IS ONE DUPLICATE - WILL JUST TAKE THE FIRST ONE
+dm3 <- !duplicated(methNames3)
+methMat3 <- methMat3[, dm3]
+methID3 <- lapply(methID3, "[", dm3)
+methNames3 <- methNames3[dm3]
+colnames(methMat3) <- methNames3
+
+methAnn3 <- methLayer3$objects$methAnn3
 
 #####
 ## GRAB THE EXPRESSION DATA
 #####
-exprLayer <- loadEntity("167731")
+exprLayer <- loadEntity("168673")
 exprMat <- exprLayer$objects$exprAgilentMat
 exprMat <- exprMat[, order(colnames(exprMat))]
 
@@ -59,8 +85,11 @@ colnames(exprMat) <- exprNames
 #####
 ## FIND OVERLAP
 #####
-meth <- methMat
-expr <- exprMat[, colnames(meth)]
+meth2 <- methMat2
+meth3 <- methMat3
+expr <- exprMat[, colnames(meth2)]
+
+
 
 ## GRAB METHYLATION ANNOTATION
 methMap <- as.list(IlluminaHumanMethylation27kALIAS2PROBE)

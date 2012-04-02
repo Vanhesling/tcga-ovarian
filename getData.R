@@ -88,7 +88,7 @@ for( i in methIds3 ){
 
 methAnn3 <- read.delim(f, header=T, as.is=T, skip=1, na.strings=theseNAs)
 rowTmp <- methAnn3[, 1]
-methAnn3 <- methAnn3[, -1]
+methAnn3 <- methAnn3[, -c(1,2)]
 rownames(methAnn3) <- rowTmp
 
 methLayer3 <- Layer(list(name="Methylation - Level 3", type="G", parentId="163905"))
@@ -97,7 +97,7 @@ methLayer3 <- addObject(methLayer3, methMat3)
 methLayer3 <- addObject(methLayer3, methAnn3)
 methLayer3 <- storeEntity(methLayer3)
 methLayer3
-## ID 168668
+## ID 168693
 
 
 
